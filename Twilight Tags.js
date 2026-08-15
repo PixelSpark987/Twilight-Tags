@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      9.1
+// @version      10.2
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
-// @author       PixelSpark987 - https://is.gd/PS987
+// @author       PixelSpark987
 // @icon         https://cdn.twibooru.org/favicon.svg
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
@@ -92,12 +92,12 @@
     const nativeFetchButtonSelector = '#js-scraper-preview, button[data-disable-with="Fetch"], button[title*="Fetch"]';
 
     const SUPPORTED_SITES = [
-        { domain: 'derpibooru.org', name: 'Derpibooru', hasImagesPath: true },
-        { domain: 'manebooru.art', name: 'Manebooru', hasImagesPath: true },
-        { domain: 'ponerpics.org', name: 'Ponerpics', hasImagesPath: true },
-        { domain: 'ponybooru.org', name: 'Ponybooru', hasImagesPath: true },
-        { domain: 'tantabus.ai', name: 'Tantabus', hasImagesPath: true },
-        { domain: 'twibooru.org', name: 'Twibooru', hasImagesPath: false }
+        { domain: 'derpibooru.org', name: 'Derpibooru', hasImagesPath: true, uploadPath: 'images/new' },
+        { domain: 'manebooru.art', name: 'Manebooru', hasImagesPath: true, uploadPath: 'images/new' },
+        { domain: 'ponerpics.org', name: 'Ponerpics', hasImagesPath: true, uploadPath: 'images/new' },
+        { domain: 'ponybooru.org', name: 'Ponybooru', hasImagesPath: true, uploadPath: 'images/new' },
+        { domain: 'tantabus.ai', name: 'Tantabus', hasImagesPath: true, uploadPath: 'images/new' },
+        { domain: 'twibooru.org', name: 'Twibooru', hasImagesPath: false, uploadPath: 'posts/new' }
     ];
 
     let errorTimeout = null;
@@ -129,7 +129,7 @@
             const match = trimmed.match(regex);
 
             if (match) {
-                const pathPrefix = site.hasImagesPath ? 'images/' : '';
+                const pathPrefix = site.hasImagesPath ? 'images/' : 'posts/';
                 return {
                     siteName: site.name,
                     domain: site.domain,
@@ -983,6 +983,105 @@
         if (clearBtn && !document.getElementById('twilight-tags-input')) {
             clearBtn.parentNode.insertBefore(createUI(), clearBtn.nextSibling);
         }
+
+        injectCrossPostButton();
+        handleAutoFetchFromParams();
+    }
+
+    function injectCrossPostButton() {
+        if (document.getElementById('twilight-crosspost-dropdown')) return;
+
+        const metabar = document.querySelector('.image-metabar');
+        if (!metabar) return;
+
+        const currentSite = getCurrentSite();
+        if (!currentSite) return;
+
+        const otherSites = SUPPORTED_SITES.filter(site => site.domain !== currentSite.domain);
+
+        const dropdownDiv = document.createElement('div');
+        dropdownDiv.id = 'twilight-crosspost-dropdown';
+        dropdownDiv.className = 'dropdown block__header__dropdown-tab';
+        dropdownDiv.style.marginLeft = 'auto';
+
+        const toggleLink = document.createElement('a');
+        toggleLink.href = '#';
+        toggleLink.title = 'Cross-post to another booru';
+        toggleLink.innerHTML = '<i class="fa fa-fw fa-upload"></i> <span class="hide-limited-desktop hide-mobile">Upload</span> <i class="fa fa-caret-down"></i>';
+
+        const dropdownContent = document.createElement('div');
+        dropdownContent.className = 'dropdown__content dropdown__content-right';
+
+        const block = document.createElement('div');
+        block.className = 'block';
+
+        const blockContent = document.createElement('div');
+        blockContent.className = 'block__content';
+
+        otherSites.forEach(site => {
+            const listDiv = document.createElement('div');
+            listDiv.className = 'block__list';
+
+            const itemLink = document.createElement('a');
+            itemLink.className = 'block__list__link primary';
+
+            const currentPostUrl = window.location.href;
+            const targetUrl = `https://${site.domain}/${site.uploadPath}?twilight_import=${encodeURIComponent(currentPostUrl)}`;
+
+            itemLink.href = targetUrl;
+            itemLink.innerText = site.name;
+
+            itemLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                window.open(targetUrl, '_blank');
+            }, true);
+
+            listDiv.appendChild(itemLink);
+            blockContent.appendChild(listDiv);
+        });
+
+        block.appendChild(blockContent);
+        dropdownContent.appendChild(block);
+        dropdownDiv.appendChild(toggleLink);
+        dropdownDiv.appendChild(dropdownContent);
+
+        let lastGroup = metabar.querySelector('.stretched-mobile-links:last-child');
+        if (lastGroup) {
+            lastGroup.appendChild(dropdownDiv);
+        } else {
+            metabar.appendChild(dropdownDiv);
+        }
+    }
+
+    function handleAutoFetchFromParams() {
+        if (!window.location.pathname.includes('/images/new') && !window.location.pathname.includes('/posts/new')) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const importUrl = urlParams.get('twilight_import');
+
+        if (!importUrl) return;
+
+        const checkAndTrigger = () => {
+            const twilightInput = document.getElementById('twilight-tags-input');
+            const fetchBtn = twilightInput?.nextElementSibling;
+
+            if (twilightInput && fetchBtn) {
+                twilightInput.value = importUrl;
+                twilightInput.dispatchEvent(new Event('input', { bubbles: true }));
+                twilightInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                fetchBtn.click();
+
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            } else {
+                setTimeout(checkAndTrigger, 200);
+            }
+        };
+
+        checkAndTrigger();
     }
 
     injectUI();
