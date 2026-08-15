@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      10.2
+// @version      10.3
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -836,7 +836,7 @@
                 anonymous: false,
                 cookiePartition: { topLevelSite: `https://${siteInfo.domain}` },
                 headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    "User-Agent": navigator.userAgent
                 },
                 onload: function(response) {
                     btn.innerText = CONFIG.TEXT_BUTTON_FETCH;
