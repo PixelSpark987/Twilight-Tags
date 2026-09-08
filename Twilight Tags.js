@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      10.3
+// @version      10.6
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
-// @author       PixelSpark987
+// @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
@@ -26,9 +26,35 @@
 (function() {
     'use strict';
 
-    // ==========================================
+    // =========================
+    // TAG BLOCKLISTS PER DOMAIN - need to find blocked tags for other domains
+    // =========================
+    const DOMAIN_TAG_LISTS = {
+        'derpibooru.org': [
+            'ai *',
+            'generator:*',
+        ],
+        'manebooru.art': [
+            '',
+        ],
+        'ponerpics.org': [
+            '',
+        ],
+        'ponybooru.org': [
+            '',
+        ],
+        'tantabus.ai': [
+            'loli*',
+            'shota*',
+        ],
+        'twibooru.org': [
+            '',
+        ]
+    };
+
+    // =====================
     // CONFIGURATION SECTION
-    // ==========================================
+    // =====================
     const CONFIG = {
         // UI Colours
         COLOR_INPUT_PLACEHOLDER: '#aaaaaa',
@@ -90,6 +116,7 @@
     const fetchUrlSelector = '#image_scraper_url, #scraper_url, #image_bare_image_url, #image_fetch_url, input[name*="scraper_url"], input[name*="bare_image_url"], input[name*="fetch_url"], input[placeholder*="deviantART"], input[placeholder*="image directly"], input[placeholder*="Fetch"]';
     const fileInputSelector = '#image_image, #image_file, input[type="file"][name*="image"]';
     const nativeFetchButtonSelector = '#js-scraper-preview, button[data-disable-with="Fetch"], button[title*="Fetch"]';
+    const uploadButtonSelector = 'input[name="commit"], input[type="submit"], button[type="submit"], div.actions button[type="submit"], button.button[type="submit"]';
 
     const SUPPORTED_SITES = [
         { domain: 'derpibooru.org', name: 'Derpibooru', hasImagesPath: true, uploadPath: 'images/new' },
@@ -114,6 +141,36 @@
             }
             #twilight-tags-input.error-placeholder::placeholder {
                 color: ${CONFIG.COLOR_INPUT_ERROR_PLACEHOLDER} !important;
+            }
+            #taginput-fancy-tag_input.banned-tag-placeholder::placeholder {
+                color: #FF0000 !important;
+                font-weight: bold !important;
+            }
+            @keyframes twilightPulseRedWhite {
+                0% { background-color: #ffffff !important; }
+                50% { background-color: #ff0000 !important; }
+                100% { background-color: #ffffff !important; }
+            }
+            .twilight-tag-highlight,
+            .tag.twilight-tag-highlight,
+            span.tag.twilight-tag-highlight,
+            .js-taginput-fancy .tag.twilight-tag-highlight {
+                animation: twilightPulseRedWhite 1s infinite ease-in-out !important;
+                border: 1px solid #ff0000 !important;
+                color: #ff0000 !important;
+                --darkreader-inline-color: #ff0000 !important;
+            }
+            .twilight-tag-highlight *,
+            .tag.twilight-tag-highlight *,
+            span.tag.twilight-tag-highlight * {
+                color: #ff0000 !important;
+                --darkreader-inline-color: #ff0000 !important;
+            }
+            .twilight-tag-highlight a,
+            .tag.twilight-tag-highlight a,
+            span.tag.twilight-tag-highlight a {
+                border: none !important;
+                animation: none !important;
             }
         `;
         document.head.appendChild(style);
@@ -419,6 +476,94 @@
         }
     }
 
+    function matchesPattern(tag, pattern) {
+        const lowerTag = tag.toLowerCase().trim();
+        const lowerPattern = pattern.toLowerCase().trim();
+
+        if (!lowerPattern.includes('*')) {
+            return lowerTag === lowerPattern;
+        }
+
+        const regexString = '^' + lowerPattern.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$';
+        return new RegExp(regexString).test(lowerTag);
+    }
+
+    function checkAndApplyTagMatches(tagsArray) {
+        let currentDomain = window.location.hostname.toLowerCase().replace(/^www\./, '');
+        let targetList = DOMAIN_TAG_LISTS[currentDomain] || [];
+
+        if (!targetList || targetList.length === 0) return;
+
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+            attempts++;
+
+            const fancyTagSpans = document.querySelectorAll('.js-taginput-fancy .tag, .fancy-tag-upload .tag, [data-tag-name]');
+            let matchFound = false;
+
+            fancyTagSpans.forEach(el => {
+                let rawTagName = el.getAttribute('data-tag-name');
+                if (!rawTagName) {
+                    rawTagName = el.innerText.replace(/\s*x$/i, '').trim();
+                }
+
+                if (rawTagName) {
+                    const cleanTagName = rawTagName.toLowerCase().trim();
+                    const isBlocked = targetList.some(pattern => matchesPattern(cleanTagName, pattern));
+
+                    if (isBlocked) {
+                        el.classList.add('twilight-tag-highlight');
+                        el.style.setProperty('animation', 'twilightPulseRedWhite 1s infinite ease-in-out', 'important');
+                        el.style.setProperty('border', '1px solid #ff0000', 'important');
+                        el.style.setProperty('color', '#ff0000', 'important');
+                        el.style.setProperty('--darkreader-inline-color', '#ff0000', 'important');
+
+                        const closeAnchor = el.querySelector('a');
+                        if (closeAnchor) {
+                            closeAnchor.style.setProperty('border', 'none', 'important');
+                            closeAnchor.style.setProperty('animation', 'none', 'important');
+                            closeAnchor.style.setProperty('color', '#ff0000', 'important');
+                            closeAnchor.style.setProperty('--darkreader-inline-color', '#ff0000', 'important');
+                        }
+
+                        matchFound = true;
+                    }
+                }
+            });
+
+            if (matchFound) {
+                const uploadBtns = document.querySelectorAll(uploadButtonSelector);
+                uploadBtns.forEach(uploadBtn => {
+                    uploadBtn.disabled = true;
+                    uploadBtn.style.setProperty('opacity', '0.5', 'important');
+                    uploadBtn.style.setProperty('cursor', 'not-allowed', 'important');
+
+                    const disabledMsg = 'Upload disabled - Banned tags found';
+
+                    if (uploadBtn.hasAttribute('data-disable-with')) {
+                        uploadBtn.setAttribute('data-disable-with', disabledMsg);
+                    }
+
+                    if (uploadBtn.tagName === 'INPUT') {
+                        uploadBtn.value = disabledMsg;
+                    } else {
+                        uploadBtn.innerText = disabledMsg;
+                    }
+                });
+
+                const tagInput = document.querySelector(fancyInputSelector);
+                if (tagInput) {
+                    tagInput.placeholder = 'BANNED TAGS FOUND';
+                    tagInput.classList.add('banned-tag-placeholder');
+                }
+            }
+
+            if (attempts >= 10) {
+                clearInterval(checkInterval);
+            }
+        }, 250);
+    }
+
     function fillTags(tagsArray) {
         const plainBox = document.querySelector(plainInputSelector);
         const fancyBox = document.querySelector(fancyInputSelector);
@@ -466,13 +611,22 @@
             fancyBox.value = '';
         }
 
+        setTimeout(() => checkAndApplyTagMatches(tagsArray), 300);
+
         return true;
     }
 
-    function normalizeTagForSite(tagName, tagCategory, currentSite) {
+    function normalizeTagForSite(tagName, tagCategory, currentSite, sourceDomain) {
         const lowerCat = (tagCategory || '').toLowerCase().trim();
-        const name = (tagName || '').trim();
+        let name = (tagName || '').trim();
         const isTantabus = currentSite && currentSite.domain === 'tantabus.ai';
+
+        // Strip character: and species: namespaces if importing from Manebooru to another site
+        if (sourceDomain === 'manebooru.art' && currentSite && currentSite.domain !== 'manebooru.art') {
+            if (lowerCat === 'character' || lowerCat === 'species' || /^(character|species):/i.test(name)) {
+                name = name.replace(/^(character|species):/i, '').trim();
+            }
+        }
 
         const isCreatorType = lowerCat === 'artist' || lowerCat === 'creator' || lowerCat === 'prompter' ||
                               /^(artist|creator|prompter):/i.test(name);
@@ -706,6 +860,7 @@
         const checkBtn = document.createElement('button');
         checkBtn.innerText = CONFIG.TEXT_BUTTON_CHECK;
         checkBtn.type = 'button';
+        checkBtn.id = 'twilight-check-posts-btn';
         checkBtn.className = 'button button--separate-left button--bold';
         checkBtn.style.backgroundColor = CONFIG.COLOR_CHECK_BG;
         checkBtn.style.border = `1px solid ${CONFIG.COLOR_CHECK_BORDER}`;
@@ -860,7 +1015,7 @@
                             const tagCategory = node.getAttribute('data-tag-category') || '';
 
                             if (rawTagName) {
-                                const normalizedTag = normalizeTagForSite(rawTagName, tagCategory, currentSite);
+                                const normalizedTag = normalizeTagForSite(rawTagName, tagCategory, currentSite, siteInfo.domain);
                                 tags.push(normalizedTag);
 
                                 if (isMetadataTag(normalizedTag, tagCategory)) {
@@ -874,7 +1029,7 @@
                             tagNames.forEach(node => {
                                 const name = node.textContent.trim();
                                 if (name) {
-                                    const normalizedTag = normalizeTagForSite(name, '', currentSite);
+                                    const normalizedTag = normalizeTagForSite(name, '', currentSite, siteInfo.domain);
                                     tags.push(normalizedTag);
                                     if (isMetadataTag(normalizedTag)) {
                                         metadataTags.push(normalizedTag);
