@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      10.7
+// @version      10.8
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -17,7 +17,6 @@
 // @connect      derpibooru.org
 // @connect      manebooru.art
 // @connect      ponerpics.org
-// @connect      denybooru.org
 // @connect      ponybooru.org
 // @connect      tantabus.ai
 // @connect      twibooru.org
