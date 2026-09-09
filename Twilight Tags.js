@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      10.8
+// @version      10.9
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -666,16 +666,16 @@
             return false;
         }
 
-        const metadataCategories = ['artist', 'creator', 'prompter', 'editor', 'character', 'species', 'oc', 'rating'];
+        const metadataCategories = ['artist', 'creator', 'prompter', 'editor', 'character', 'species', 'oc'];
         if (metadataCategories.includes(lowerCat)) {
             return true;
         }
 
-        if (/^(artist|creator|prompter|editor|character|species|oc|rating):/i.test(lowerName)) {
+        if (/^(artist|creator|prompter|editor|character|species|oc):/i.test(lowerName)) {
             return true;
         }
 
-        if (['safe', 'suggestive', 'questionable', 'explicit', 'artist needed', 'editor needed'].includes(lowerName)) {
+        if (['artist needed', 'editor needed'].includes(lowerName)) {
             return true;
         }
 
@@ -703,20 +703,12 @@
             const trimmedTag = tag.trim();
             const lowerTag = trimmedTag.toLowerCase();
 
-            const isRating = ['safe', 'suggestive', 'questionable', 'explicit'].includes(lowerTag) || /^rating:/i.test(trimmedTag);
             const isArtistOrEditor = /^(artist|creator|prompter|editor):/i.test(trimmedTag);
 
             if (isArtistOrEditor) {
                 if (selectedArtist && lowerTag !== selectedArtist.toLowerCase()) {
                     return;
                 }
-                if (!cleanTags.includes(trimmedTag)) {
-                    cleanTags.push(trimmedTag);
-                }
-                return;
-            }
-
-            if (isRating) {
                 if (!cleanTags.includes(trimmedTag)) {
                     cleanTags.push(trimmedTag);
                 }
@@ -921,7 +913,7 @@
             }
 
             if (fetchedMetadataTagsStore.length === 0) {
-                alert('No artist, prompter, character, species, rating, or editor tags available to perform duplicate search.');
+                alert('No artist, prompter, character, species, or editor tags available to perform duplicate search.');
                 return;
             }
 
