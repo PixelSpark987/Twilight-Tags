@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.3
+// @version      11.4
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -429,7 +429,7 @@
                 `***\n`;
         }
 
-        const scriptLink = formatLink('Twilight Tags', 'https://github.com/PixelSpark987/Twilight-Tags', currentDomain);
+        const scriptLink = formatLink('Twilight Tags', 'https://is.gd/PS987GH', currentDomain);
 
         formattedOutput +=
             `Image imported from ${sitePostLink}\n` +
