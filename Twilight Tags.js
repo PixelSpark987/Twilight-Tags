@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.1
+// @version      11.2
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -627,11 +627,16 @@
         const lowerCat = (tagCategory || '').toLowerCase().trim();
         let name = (tagName || '').trim();
         const isTantabus = currentSite && currentSite.domain === 'tantabus.ai';
+        const isManebooru = currentSite && currentSite.domain === 'manebooru.art';
 
         if (sourceDomain === 'manebooru.art' && currentSite && currentSite.domain !== 'manebooru.art') {
             if (lowerCat === 'character' || lowerCat === 'species' || /^(character|species):/i.test(name)) {
                 name = name.replace(/^(character|species):/i, '').trim();
             }
+        }
+
+        if (isManebooru && /^generator:/i.test(name)) {
+            name = name.replace(/^generator:/i, 'ai model:').trim();
         }
 
         const isCreatorType = lowerCat === 'artist' || lowerCat === 'creator' || lowerCat === 'prompter' ||
@@ -1042,12 +1047,18 @@
                         const isFromTantabus = siteInfo.domain === 'tantabus.ai';
                         const isAiImage = isFromTantabus || tags.some(tag => {
                             const lower = tag.toLowerCase();
-                            return lower === 'ai generated' || lower.startsWith('generator:');
+                            return lower === 'ai generated' || lower.startsWith('generator:') || lower.startsWith('ai model:') || lower === 'machine learning generated';
                         });
 
                         if (isAiImage) {
                             tags = convertArtistsToPrompters(tags);
                             metadataTags = convertArtistsToPrompters(metadataTags);
+
+                            if (currentSite && currentSite.domain === 'manebooru.art') {
+                                if (!tags.some(tag => tag.toLowerCase() === 'machine learning generated')) {
+                                    tags.push('machine learning generated');
+                                }
+                            }
                         }
 
                         const newImportTag = `${siteInfo.siteName.toLowerCase()} import`;
