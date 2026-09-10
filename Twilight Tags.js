@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.2
+// @version      11.3
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -644,6 +644,9 @@
 
         if (isCreatorType) {
             const cleanName = name.replace(/^(artist|creator|prompter):/i, '');
+            if (isManebooru) {
+                return `artist:${cleanName}`;
+            }
             return isTantabus ? `creator:${cleanName}` : `artist:${cleanName}`;
         }
 
@@ -660,6 +663,15 @@
         return tagsList.map(tag => {
             if (/^artist:/i.test(tag.trim())) {
                 return tag.replace(/^artist:/i, 'prompter:');
+            }
+            return tag;
+        });
+    }
+
+    function convertCreatorTagsToArtist(tagsList) {
+        return tagsList.map(tag => {
+            if (/^(prompter|creator):/i.test(tag.trim())) {
+                return tag.replace(/^(prompter|creator):/i, 'artist:');
             }
             return tag;
         });
@@ -1059,6 +1071,11 @@
                                     tags.push('machine learning generated');
                                 }
                             }
+                        }
+
+                        if (currentSite && currentSite.domain === 'manebooru.art') {
+                            tags = convertCreatorTagsToArtist(tags);
+                            metadataTags = convertCreatorTagsToArtist(metadataTags);
                         }
 
                         const newImportTag = `${siteInfo.siteName.toLowerCase()} import`;
