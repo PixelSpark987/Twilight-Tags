@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      10.9
+// @version      11.1
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -89,23 +89,7 @@
         TEXT_PLACEHOLDER_INPUT: 'Paste a post URL',
         TEXT_ERROR_INVALID_URL: 'Invalid URL',
         TEXT_ERROR_SAME_HOST: 'Same Host',
-        TEXT_ERROR_ALREADY_EXISTS: 'Image already exists',
-        TEXT_ERROR_AI_NOT_ALLOWED: 'AI Not Allowed',
-
-        // AI Detection Terms (for Derpibooru imports)
-        AI_TAG_KEYWORDS: [
-            'ai generated',
-            'ai content',
-            'ai art',
-            'stable diffusion',
-            'novelai',
-            'midjourney',
-            'dall-e',
-            'dalle',
-            'flux.1',
-            'comfyui',
-            'webui'
-        ]
+        TEXT_ERROR_ALREADY_EXISTS: 'Image already exists'
     };
     // ==========================================
 
@@ -269,13 +253,21 @@
         return `${year}-${month}-${day} - ${hours}:${minutes}:${seconds} UTC`;
     }
 
+    function formatLink(text, url, targetDomain) {
+        if (!url) return text;
+        if (targetDomain === 'manebooru.art') {
+            return `"${text}":${url}`;
+        }
+        return `[${text}](${url})`;
+    }
+
     function htmlToMarkdown(element) {
         if (!element) return '';
 
         const clone = element.cloneNode(true);
 
-        const headerNode = clone.querySelector('.block__header');
-        if (headerNode) headerNode.remove();
+        const elementsToRemove = clone.querySelectorAll('.block__header, .spoiler, .overlay, .image-description__filter-warning, [data-image-spoiler], .hidden');
+        elementsToRemove.forEach(node => node.remove());
 
         function parseNode(node) {
             if (node.nodeType === 3) {
@@ -323,6 +315,11 @@
 
         let markdown = parseNode(clone);
         markdown = markdown.replace(/\n{3,}/g, '\n\n').trim();
+
+        if (markdown.includes('This image is blocked by your current filter')) {
+            return '';
+        }
+
         return markdown;
     }
 
@@ -398,11 +395,14 @@
         if (!isBackgroundPony) {
             const originProfileUrl = uploaderUrl || `https://${siteInfo.domain}/profiles/${encodeURIComponent(uploaderName)}`;
             const targetBooruProfileUrl = `https://${currentDomain}/profiles/${encodeURIComponent(uploaderName)}`;
-            uploaderFormatted = `[${uploaderName}](${originProfileUrl}) - ([here](${targetBooruProfileUrl}))`;
+            
+            const originLink = formatLink(uploaderName, originProfileUrl, currentDomain);
+            const targetLink = formatLink('here', targetBooruProfileUrl, currentDomain);
+            uploaderFormatted = `${originLink} - (${targetLink})`;
         }
 
         const utcTimestamp = getFormattedUtcTimestamp();
-        const sitePostLink = `[${siteInfo.siteName} - ${siteInfo.imageId}](${cleanFetchUrl})`;
+        const sitePostLink = formatLink(`${siteInfo.siteName} - ${siteInfo.imageId}`, cleanFetchUrl, currentDomain);
 
         let formattedOutput =
             `**Twilight Tags - Stats**\n` +
@@ -418,15 +418,22 @@
             `***\n`;
 
         if (originalDescription) {
+            let processedDesc = originalDescription;
+            if (currentDomain === 'manebooru.art') {
+                processedDesc = processedDesc.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '"$1":$2');
+            }
+
             formattedOutput +=
                 `**Original Description:**\n` +
-                `${originalDescription}\n` +
+                `${processedDesc}\n` +
                 `***\n`;
         }
 
+        const scriptLink = formatLink('Twilight Tags', 'https://github.com/PixelSpark987/Twilight-Tags', currentDomain);
+
         formattedOutput +=
             `Image imported from ${sitePostLink}\n` +
-            `Imported with [Twilight Tags](https://github.com/PixelSpark987/Twilight-Tags)`;
+            `Imported with ${scriptLink}`;
 
         descInput.value = formattedOutput;
         descInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -621,7 +628,6 @@
         let name = (tagName || '').trim();
         const isTantabus = currentSite && currentSite.domain === 'tantabus.ai';
 
-        // Strip character: and species: namespaces if importing from Manebooru to another site
         if (sourceDomain === 'manebooru.art' && currentSite && currentSite.domain !== 'manebooru.art') {
             if (lowerCat === 'character' || lowerCat === 'species' || /^(character|species):/i.test(name)) {
                 name = name.replace(/^(character|species):/i, '').trim();
@@ -1028,23 +1034,6 @@
                                     }
                                 }
                             });
-                        }
-
-                        if (currentSite && currentSite.domain === 'derpibooru.org') {
-                            if (siteInfo.domain === 'tantabus.ai') {
-                                triggerErrorUI(input, CONFIG.TEXT_ERROR_AI_NOT_ALLOWED, true);
-                                return;
-                            }
-
-                            const hasAiTag = tags.some(tag => {
-                                const lowerTag = tag.toLowerCase();
-                                return CONFIG.AI_TAG_KEYWORDS.some(aiKeyword => lowerTag.includes(aiKeyword));
-                            });
-
-                            if (hasAiTag) {
-                                triggerErrorUI(input, CONFIG.TEXT_ERROR_AI_NOT_ALLOWED, true);
-                                return;
-                            }
                         }
 
                         tags = tags.filter(tag => !/^[a-z0-9]+\s+import$/i.test(tag.trim()));
