@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.4
+// @version      11.5
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -34,6 +34,7 @@
             'generator:*',
         ],
         'manebooru.art': [
+            'banned tags',
             'loli*',
             'shota*',
         ],
