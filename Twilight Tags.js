@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.5
+// @version      11.6
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -34,9 +34,41 @@
             'generator:*',
         ],
         'manebooru.art': [
-            'banned tags',
-            'loli*',
-            'shota*',
+            'aryanne'
+            'faggot'
+            'foal bride'
+            'foalcon'
+            'holocaust denial'
+            'holocaust joke'
+            'homophobia'
+            'human exhibitionism'
+            'imminent foalcon'
+            'implied foalcon'
+            'implied pedophilia'
+            'luftwaffe'
+            'nazipone'
+            'nazi'
+            'nibba'
+            'nigga'
+            'niggers'
+            'nigger'
+            'no way fag'
+            'oc:aryanne'
+            'oc:luftkrieg'
+            'oc:luftwaffe'
+            'op is a faggot'
+            'racial slur'
+            'racism'
+            'racist'
+            'retarded'
+            'retard'
+            'sieg heil'
+            'slur'
+            'straight shota'
+            'swastika'
+            'ur a faget'
+            'zigger'
+            '卐'
         ],
         'ponerpics.org': [
             '',
