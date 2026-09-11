@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.6
+// @version      11.7
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
@@ -30,58 +30,63 @@
     // =========================
     const DOMAIN_TAG_LISTS = {
         'derpibooru.org': [
-            'ai *',
-            'generator:*',
+            'holocaust denial',
+            'holocaust joke',
         ],
         'manebooru.art': [
-            'aryanne'
-            'faggot'
-            'foal bride'
-            'foalcon'
-            'holocaust denial'
-            'holocaust joke'
-            'homophobia'
-            'human exhibitionism'
-            'imminent foalcon'
-            'implied foalcon'
-            'implied pedophilia'
-            'luftwaffe'
-            'nazipone'
-            'nazi'
-            'nibba'
-            'nigga'
-            'niggers'
-            'nigger'
-            'no way fag'
-            'oc:aryanne'
-            'oc:luftkrieg'
-            'oc:luftwaffe'
-            'op is a faggot'
-            'racial slur'
-            'racism'
-            'racist'
-            'retarded'
-            'retard'
-            'sieg heil'
-            'slur'
-            'straight shota'
-            'swastika'
-            'ur a faget'
-            'zigger'
-            '卐'
+            'aryanne',
+            'faggot',
+            'foal bride',
+            'foalcon',
+            'holocaust denial',
+            'holocaust joke',
+            'homophobia',
+            'human exhibitionism',
+            'imminent foalcon',
+            'implied foalcon',
+            'implied pedophilia',
+            'luftwaffe',
+            'nazipone',
+            'nazi',
+            'nibba',
+            'nigga',
+            'niggers',
+            'nigger',
+            'no way fag',
+            'oc:aryanne',
+            'oc:luftkrieg',
+            'oc:luftwaffe',
+            'op is a faggot',
+            'racial slur',
+            'racism',
+            'racist',
+            'retarded',
+            'retard',
+            'sieg heil',
+            'slur',
+            'straight shota',
+            'swastika',
+            'ur a faget',
+            'zigger',
+            '卐',
         ],
         'ponerpics.org': [
-            '',
+            'holocaust denial',
+            'holocaust joke',
         ],
         'ponybooru.org': [
-            '',
+            'holocaust denial',
+            'holocaust joke',
         ],
         'tantabus.ai': [
+            'holocaust denial',
+            'holocaust joke',
             'loli*',
             'shota*',
         ],
         'twibooru.org': [
-            '',
+            'holocaust denial',
+            'holocaust joke',
         ]
     };
 
@@ -163,18 +168,13 @@
                 color: #FF0000 !important;
                 font-weight: bold !important;
             }
-            @keyframes twilightPulseRedWhite {
-                0% { background-color: #ffffff !important; }
-                50% { background-color: #ff0000 !important; }
-                100% { background-color: #ffffff !important; }
-            }
             .twilight-tag-highlight,
             .tag.twilight-tag-highlight,
             span.tag.twilight-tag-highlight,
             .js-taginput-fancy .tag.twilight-tag-highlight {
-                animation: twilightPulseRedWhite 1s infinite ease-in-out !important;
                 border: 1px solid #ff0000 !important;
                 color: #ff0000 !important;
+                background-color: #ffffff !important;
                 --darkreader-inline-color: #ff0000 !important;
             }
             .twilight-tag-highlight *,
@@ -186,8 +186,10 @@
             .twilight-tag-highlight a,
             .tag.twilight-tag-highlight a,
             span.tag.twilight-tag-highlight a {
-                border: none !important;
-                animation: none !important;
+                border: 0 !important;
+                border-style: none !important;
+                outline: none !important;
+                box-shadow: none !important;
             }
         `;
         document.head.appendChild(style);
@@ -428,7 +430,7 @@
         if (!isBackgroundPony) {
             const originProfileUrl = uploaderUrl || `https://${siteInfo.domain}/profiles/${encodeURIComponent(uploaderName)}`;
             const targetBooruProfileUrl = `https://${currentDomain}/profiles/${encodeURIComponent(uploaderName)}`;
-            
+
             const originLink = formatLink(uploaderName, originProfileUrl, currentDomain);
             const targetLink = formatLink('here', targetBooruProfileUrl, currentDomain);
             uploaderFormatted = `${originLink} - (${targetLink})`;
@@ -553,7 +555,6 @@
 
                     if (isBlocked) {
                         el.classList.add('twilight-tag-highlight');
-                        el.style.setProperty('animation', 'twilightPulseRedWhite 1s infinite ease-in-out', 'important');
                         el.style.setProperty('border', '1px solid #ff0000', 'important');
                         el.style.setProperty('color', '#ff0000', 'important');
                         el.style.setProperty('--darkreader-inline-color', '#ff0000', 'important');
@@ -561,7 +562,6 @@
                         const closeAnchor = el.querySelector('a');
                         if (closeAnchor) {
                             closeAnchor.style.setProperty('border', 'none', 'important');
-                            closeAnchor.style.setProperty('animation', 'none', 'important');
                             closeAnchor.style.setProperty('color', '#ff0000', 'important');
                             closeAnchor.style.setProperty('--darkreader-inline-color', '#ff0000', 'important');
                         }
@@ -1109,6 +1109,22 @@
                         if (currentSite && currentSite.domain === 'manebooru.art') {
                             tags = convertCreatorTagsToArtist(tags);
                             metadataTags = convertCreatorTagsToArtist(metadataTags);
+                        }
+
+                        const hasArtistOrCreatorTag = tags.some(tag => {
+                            const trimmed = tag.trim().toLowerCase();
+                            return /^(artist|creator|prompter):/i.test(trimmed) || 
+                                   ['unknown artist', 'unknown creator', 'unknown prompter', 'anonymous artist'].includes(trimmed);
+                        });
+
+                        if (!hasArtistOrCreatorTag) {
+                            let fallbackTag = 'unknown artist';
+                            if (isAiImage) {
+                                fallbackTag = 'unknown prompter';
+                            } else if (currentSite && currentSite.domain === 'tantabus.ai') {
+                                fallbackTag = 'unknown creator';
+                            }
+                            tags.push(fallbackTag);
                         }
 
                         const newImportTag = `${siteInfo.siteName.toLowerCase()} import`;
