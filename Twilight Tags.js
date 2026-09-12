@@ -1,19 +1,19 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.7
+// @version      11.8
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
+// @grant        GM_xmlhttpRequest
 // @match        https://derpibooru.org/*
 // @match        https://manebooru.art/*
 // @match        https://ponerpics.org/*
 // @match        https://ponybooru.org/*
 // @match        https://tantabus.ai/*
 // @match        https://twibooru.org/*
-// @grant        GM_xmlhttpRequest
 // @connect      derpibooru.org
 // @connect      manebooru.art
 // @connect      ponerpics.org
@@ -418,6 +418,10 @@
         const descInput = document.querySelector(descriptionSelector);
         if (!descInput) return;
 
+        // Retrieve script version dynamically from GM_info
+        const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script?.version) ? GM_info.script.version : '';
+        const versionLabel = scriptVersion ? ` - ver. ${scriptVersion}` : '';
+
         const { stats, uploaderName, uploaderUrl, originalDescription } = statsData;
         const currentSite = getCurrentSite();
         const currentDomain = currentSite ? currentSite.domain : window.location.hostname;
@@ -440,7 +444,7 @@
         const sitePostLink = formatLink(`${siteInfo.siteName} - ${siteInfo.imageId}`, cleanFetchUrl, currentDomain);
 
         let formattedOutput =
-            `**Twilight Tags - Stats**\n` +
+            `**Twilight Tags - Stats**${versionLabel}\n` +
             `**Imported at:** ${utcTimestamp}\n` +
             `***\n` +
             `**Original Image Stats**\n` +
