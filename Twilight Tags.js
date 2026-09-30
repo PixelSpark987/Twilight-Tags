@@ -1,19 +1,25 @@
 // ==UserScript==
 // @name         Twilight Tags
 // @namespace    http://tampermonkey.net/
-// @version      11.8
+// @version      11.9
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
 // @icon         https://cdn.twibooru.org/favicon.svg
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @grant        GM_xmlhttpRequest
-// @match        https://derpibooru.org/*
-// @match        https://manebooru.art/*
-// @match        https://ponerpics.org/*
-// @match        https://ponybooru.org/*
-// @match        https://tantabus.ai/*
-// @match        https://twibooru.org/*
+// @match        *://derpibooru.org/*
+// @match        *://*.derpibooru.org/*
+// @match        *://manebooru.art/*
+// @match        *://*.manebooru.art/*
+// @match        *://ponerpics.org/*
+// @match        *://*.ponerpics.org/*
+// @match        *://ponybooru.org/*
+// @match        *://*.ponybooru.org/*
+// @match        *://tantabus.ai/*
+// @match        *://*.tantabus.ai/*
+// @match        *://twibooru.org/*
+// @match        *://*.twibooru.org/*
 // @connect      derpibooru.org
 // @connect      manebooru.art
 // @connect      ponerpics.org
