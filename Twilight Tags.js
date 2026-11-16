@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Twilight Tags
-// @namespace    http://tampermonkey.net/
-// @version      11.9
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
+// @version      2026.11.15.01
 // @icon         https://cdn.twibooru.org/favicon.svg
+// @namespace    http://tampermonkey.net/
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @grant        GM_xmlhttpRequest
+// 
 // @match        *://derpibooru.org/*
 // @match        *://*.derpibooru.org/*
 // @match        *://manebooru.art/*
@@ -424,7 +425,6 @@
         const descInput = document.querySelector(descriptionSelector);
         if (!descInput) return;
 
-        // Retrieve script version dynamically from GM_info
         const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script?.version) ? GM_info.script.version : '';
         const versionLabel = scriptVersion ? ` - ver. ${scriptVersion}` : '';
 
@@ -1100,6 +1100,13 @@
                         metadataTags = metadataTags.filter(tag => !/^[a-z0-9]+\s+import$/i.test(tag.trim()));
 
                         const isFromTantabus = siteInfo.domain === 'tantabus.ai';
+
+                        if (isFromTantabus) {
+                            if (!tags.some(tag => tag.toLowerCase() === 'ai content')) {
+                                tags.push('ai content');
+                            }
+                        }
+
                         const isAiImage = isFromTantabus || tags.some(tag => {
                             const lower = tag.toLowerCase();
                             return lower === 'ai generated' || lower.startsWith('generator:') || lower.startsWith('ai model:') || lower === 'machine learning generated';
