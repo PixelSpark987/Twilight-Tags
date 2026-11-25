@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Twilight Tags
-// @namespace    http://tampermonkey.net/
-// @version      2026-11-25_01
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
+// @version      2026-11-25_02
 // @icon         https://cdn.twibooru.org/favicon.svg
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
+// @namespace    http://tampermonkey.net/
 // @grant        GM_xmlhttpRequest
 // @match        *://derpibooru.org/*
 // @match        *://*.derpibooru.org/*
