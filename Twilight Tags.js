@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         Twilight Tags
+// @namespace    http://tampermonkey.net/
+// @version      2026-11-25_01
 // @description  Fetches tags, source URL, stats, original description, and direct images from Philomena-based boorus
 // @author       PixelSpark987 - https://is.gd/PS987
-// @version      2026.11.15.01
 // @icon         https://cdn.twibooru.org/favicon.svg
-// @namespace    http://tampermonkey.net/
 // @downloadURL  https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @updateURL    https://raw.githubusercontent.com/PixelSpark987/Twilight-Tags/refs/heads/main/Twilight%20Tags.js
 // @grant        GM_xmlhttpRequest
-// 
 // @match        *://derpibooru.org/*
 // @match        *://*.derpibooru.org/*
 // @match        *://manebooru.art/*
@@ -41,41 +40,8 @@
             'holocaust joke',
         ],
         'manebooru.art': [
-            'aryanne',
-            'faggot',
-            'foal bride',
-            'foalcon',
             'holocaust denial',
             'holocaust joke',
-            'homophobia',
-            'human exhibitionism',
-            'imminent foalcon',
-            'implied foalcon',
-            'implied pedophilia',
-            'luftwaffe',
-            'nazipone',
-            'nazi',
-            'nibba',
-            'nigga',
-            'niggers',
-            'nigger',
-            'no way fag',
-            'oc:aryanne',
-            'oc:luftkrieg',
-            'oc:luftwaffe',
-            'op is a faggot',
-            'racial slur',
-            'racism',
-            'racist',
-            'retarded',
-            'retard',
-            'sieg heil',
-            'slur',
-            'straight shota',
-            'swastika',
-            'ur a faget',
-            'zigger',
-            '卐',
         ],
         'ponerpics.org': [
             'holocaust denial',
@@ -1268,7 +1234,7 @@
                 window.open(targetUrl, '_blank');
             }, true);
 
-            listDiv.appendChild(itemLink);
+            listDiv.appendChild(listLink);
             blockContent.appendChild(listDiv);
         });
 
